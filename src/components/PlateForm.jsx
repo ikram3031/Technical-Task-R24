@@ -45,7 +45,6 @@ export default function PlateForm({ value, onCommit }) {
             <span className="input-group-text">cm</span>
             {wErr && <div className="invalid-feedback">{wErr}</div>}
           </div>
-          <span className="meta-line">{Math.round(parseLocaleNumber(wInput||value.widthCm)*10)} mm</span>
         </div>
 
         {/* HEIGHT */}
@@ -66,12 +65,8 @@ export default function PlateForm({ value, onCommit }) {
             <span className="input-group-text">cm</span>
             {hErr && <div className="invalid-feedback">{hErr}</div>}
           </div>
-          <span className="meta-line">{Math.round(parseLocaleNumber(hInput||value.heightCm)*10)} mm</span>
         </div>
       </div>
-      <small className="text-muted d-block mt-2">
-        Unterstützt „.“ und „,“ als Dezimaltrennzeichen. Werte werden nur beim Verlassen des Feldes gespeichert.
-      </small>
     </div>
   );
 }
