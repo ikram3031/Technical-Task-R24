@@ -1,80 +1,134 @@
 import React, { useEffect, useState } from "react";
-import PlatePreview from "./components/PlatePreview.jsx";
+import MultiPlatePreview from "./components/MultiPlatePreview.jsx";
+import PlateItem from "./components/PlateItem.jsx";
 import PlateMeta from "./components/PlateMeta.jsx";
 import {
   DEFAULT_PLATE,
-  STORAGE_KEY,
+  NEW_PLATE,
   DEFAULT_MOTIF_URL,
+  STORAGE_KEY,
+  STORAGE_KEY_PLATES,
 } from "./constants/config.js";
 
+function withId(p) {
+  return { ...p, id: crypto.randomUUID(), motifUrl: DEFAULT_MOTIF_URL };
+}
+const ensureMotif = (list) =>
+  (Array.isArray(list) ? list : []).map((p) => ({
+    ...p,
+    motifUrl:
+      typeof p?.motifUrl === "string" && p.motifUrl.startsWith("http")
+        ? p.motifUrl
+        : DEFAULT_MOTIF_URL,
+  }));
+
 export default function App() {
-  // 1) Load once from localStorage (or default)
-  const [plate, setPlate] = useState(() => {
+  const [plates, setPlates] = useState(() => {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        // very small sanitize so bad urls don't stick around
-        const widthCm = Number.isFinite(+parsed?.widthCm)
-          ? +parsed.widthCm
-          : DEFAULT_PLATE.widthCm;
-        const heightCm = Number.isFinite(+parsed?.heightCm)
-          ? +parsed.heightCm
-          : DEFAULT_PLATE.heightCm;
-        const url =
-          typeof parsed?.motifUrl === "string" &&
-          parsed.motifUrl.startsWith("http") &&
-          !parsed.motifUrl.includes("google.com/url")
-            ? parsed.motifUrl
-            : DEFAULT_MOTIF_URL;
-        return { widthCm, heightCm, motifUrl: url };
+      const savedArray = localStorage.getItem(STORAGE_KEY_PLATES);
+      if (savedArray) {
+        const list = JSON.parse(savedArray);
+        if (Array.isArray(list) && list.length) return ensureMotif(list);
+      }
+      const single = localStorage.getItem(STORAGE_KEY);
+      if (single) {
+        const p = JSON.parse(single);
+        return ensureMotif([
+          withId({
+            widthCm: Number.isFinite(+p?.widthCm) ? +p.widthCm : DEFAULT_PLATE.widthCm,
+            heightCm: Number.isFinite(+p?.heightCm) ? +p.heightCm : DEFAULT_PLATE.heightCm,
+            motifUrl: typeof p?.motifUrl === "string" ? p.motifUrl : DEFAULT_MOTIF_URL,
+          }),
+        ]);
       }
     } catch {}
-    return DEFAULT_PLATE;
+    return ensureMotif([withId(DEFAULT_PLATE), withId(NEW_PLATE)]);
   });
 
-  // 2) Persist whenever plate changes
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(plate));
+      localStorage.setItem(STORAGE_KEY_PLATES, JSON.stringify(plates));
     } catch {}
-  }, [plate]);
+  }, [plates]);
 
-  const handleReset = () => setPlate(DEFAULT_PLATE);
+  const addPlate = () => {
+    setPlates((prev) =>
+      prev.length >= 10 ? prev : [...prev, withId(NEW_PLATE)]
+    );
+  };
+
+  const removePlate = (id) => {
+    setPlates((prev) =>
+      prev.length <= 1 ? prev : prev.filter((p) => p.id !== id)
+    );
+  };
+
+  const updatePlate = (id, next) => {
+    setPlates((prev) => prev.map((p) => (p.id === id ? { ...p, ...next } : p)));
+  };
+
+  const totalWidthCm = plates.reduce((s, p) => s + p.widthCm, 0);
+  const maxHeightCm = plates.reduce((m, p) => Math.max(m, p.heightCm), 0);
 
   return (
     <div className="container py-4">
       <header className="mb-3">
-        <h1 className="h4 mb-1">Plate Generator — Step 1</h1>
+        <h1 className="h4 mb-1">Plate Generator — Step 3</h1>
         <p className="text-muted mb-0">
-          Default plate on load + persistence (no custom hooks).
+          Manage multiple plates. Preview is fixed; plates are exact size, laid
+          out side-by-side.
         </p>
       </header>
 
       <div className="row g-4">
+        {/* Left: multi-plate preview */}
         <div className="col-12 col-lg-8">
-          <div className="card shadow-sm">
-            <div className="card-header bg-white">
-              <strong>Preview</strong>
-            </div>
-            <div className="card-body">
-              <PlatePreview
-                widthCm={plate.widthCm}
-                heightCm={plate.heightCm}
-                motifUrl={plate.motifUrl}
-              />
+          <div className="left-sticky mobile-sticky">
+            <div className="card shadow-sm preview-card">
+              <div className="card-header bg-white">
+                <strong>Preview</strong>
+              </div>
+              <MultiPlatePreview plates={plates} motifUrl={DEFAULT_MOTIF_URL} />
             </div>
           </div>
         </div>
 
-        <div className="col-12 col-lg-4">
+        {/* Right: plate list + add button + meta */}
+        <div className="col-12 col-lg-4 d-flex flex-column gap-3">
+          {/* Plate forms */}
+          {plates.map((p, idx) => (
+            <PlateItem
+              key={p.id}
+              index={idx}
+              plate={p}
+              onCommit={(next) => updatePlate(p.id, next)}
+              onRemove={() => removePlate(p.id)}
+              canRemove={plates.length > 1}
+            />
+          ))}
+
+          {/* Add button */}
+          <div className="d-grid">
+            <button
+              className="btn-add"
+              onClick={addPlate}
+              disabled={plates.length >= 10}
+            >
+              Rückwand hinzufügen +
+            </button>
+          </div>
+
+          {/* Meta info */}
           <div className="card border-0">
             <div className="card-body">
               <PlateMeta
-                plate={plate}
-                storageKey={STORAGE_KEY}
-                onReset={handleReset}
+                plate={{ widthCm: totalWidthCm, heightCm: maxHeightCm }}
+                storageKey={STORAGE_KEY_PLATES}
+                onReset={() => setPlates([withId(DEFAULT_PLATE)])}
               />
+              <small className="text-muted">
+                Plates: {plates.length} (1–10)
+              </small>
             </div>
           </div>
         </div>
