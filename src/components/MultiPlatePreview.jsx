@@ -2,10 +2,10 @@ import React, { useEffect, useRef, useState } from "react";
 import { HEIGHT_MAX } from "../constants/limits.js";
 
 /**
- * Step 6: Shared motif slicing
- *
- * Plates are windows on one big motif image.
- * Each plate shows the correct horizontal slice of the motif.
+ * Step 6 + Step 7 (correct):
+ * - If total width ≤ 300 cm → single motif, sliced (Step 6).
+ * - If total width  > 300 cm → extend motif by mirroring tiles (Step 7).
+ * Plates show their slice by offsetting the big canvas by -leftPx.
  */
 export default function MultiPlatePreview({ plates, motifUrl }) {
   const boxRef = useRef(null);
@@ -20,8 +20,8 @@ export default function MultiPlatePreview({ plates, motifUrl }) {
       const boxH = Math.max(1, rect.height);
 
       const totalWidthCm = plates.reduce((sum, p) => sum + p.widthCm, 0) || 1;
-      const vScale = boxH / HEIGHT_MAX;   // vertical scale: 128cm -> box height
-      const hScale = boxW / totalWidthCm; // horizontal fit
+      const vScale = boxH / HEIGHT_MAX;   // 128 cm -> full height
+      const hScale = boxW / totalWidthCm; // shrink if too wide
       setScale(Math.min(vScale, hScale));
     }
     compute();
@@ -29,11 +29,22 @@ export default function MultiPlatePreview({ plates, motifUrl }) {
     return () => window.removeEventListener("resize", compute);
   }, [plates]);
 
-  const boxH = 360; // preview height (fixed by style below)
+  const boxH = 360; // matches your fixed preview height
   const totalWidthCm = plates.reduce((s, p) => s + p.widthCm, 0) || 1;
+
+  // Step 7 constants
+  const MOTIF_WIDTH_CM = 300;                // base motif logical width
+  const needMirror = totalWidthCm > MOTIF_WIDTH_CM;
+
+  // Frame dimensions (the full layout in px)
   const frameW = Math.round(totalWidthCm * scale);
   const frameH = boxH;
 
+  // Mirroring tile width in px (each tile is 300 cm wide at current scale)
+  const tileW = Math.round(MOTIF_WIDTH_CM * scale);
+  const tileCount = Math.max(1, Math.ceil(frameW / tileW));
+
+  // Running x (in cm) to place plate windows
   let xCm = 0;
 
   return (
@@ -61,22 +72,55 @@ export default function MultiPlatePreview({ plates, motifUrl }) {
               boxShadow: "0 2px 6px rgba(0,0,0,.06)",
             }}
           >
-            {/* Shared motif image, sized to full frame, shifted left for slice */}
-            <img
-              src={motifUrl}
-              alt={`plate-${i + 1}`}
-              style={{
-                position: "absolute",
-                left: -leftPx,       // shift so only this slice is visible
-                bottom: 0,
-                width: frameW,
-                height: frameH,
-                objectFit: "cover",
-                objectPosition: "center bottom", // crop center-out horizontally, bottom vertically
-                userSelect: "none",
-                pointerEvents: "none",
-              }}
-            />
+            {/* --- Step 6: simple single image (≤ 300 cm) --- */}
+            {!needMirror && (
+              <img
+                src={motifUrl}
+                alt={`plate-${i + 1}`}
+                style={{
+                  position: "absolute",
+                  left: -leftPx,      // shift so this plate shows its slice
+                  bottom: 0,
+                  width: frameW,
+                  height: frameH,
+                  objectFit: "cover",
+                  objectPosition: "center bottom",
+                  userSelect: "none",
+                  pointerEvents: "none",
+                }}
+              />
+            )}
+
+            {/* --- Step 7: mirrored tiling (> 300 cm) --- */}
+            {needMirror && (
+              <div
+                style={{
+                  position: "absolute",
+                  left: -leftPx,   // align to the global canvas
+                  bottom: 0,
+                  width: frameW,
+                  height: frameH,
+                  display: "flex",
+                }}
+              >
+                {Array.from({ length: tileCount }).map((_, idx) => (
+                  <img
+                    key={idx}
+                    src={motifUrl}
+                    alt={`motif-tile-${idx}`}
+                    style={{
+                      width: tileW,
+                      height: frameH,
+                      objectFit: "cover",
+                      objectPosition: "center bottom",
+                      transform: idx % 2 === 1 ? "scaleX(-1)" : "none", // mirror every other tile
+                      userSelect: "none",
+                      pointerEvents: "none",
+                    }}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         );
       })}
