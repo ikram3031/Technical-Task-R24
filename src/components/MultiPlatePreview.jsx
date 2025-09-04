@@ -1,17 +1,17 @@
 import React, { useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion"; // ✅ added
 import { HEIGHT_MAX } from "../constants/limits.js";
 
 /**
- * MultiPlatePreview
- * - Fixed vertical scale (128cm == preview height)
- * - Horizontal scale shrinks if total width exceeds preview width
- * - Step 6: single motif when totalWidth <= 300 cm
- * - Step 7: mirrored tiling when totalWidth > 300 cm
+ * MultiPlatePreview with animation
+ * - Step 6: single motif (≤ 300 cm)
+ * - Step 7: mirrored tiling (> 300 cm)
+ * - Animate width/height transitions
  */
 export default function MultiPlatePreview({ plates, motifUrl }) {
   const boxRef = useRef(null);
-  const [scaleX, setScaleX] = useState(1); // horizontal cm -> px
-  const [scaleY, setScaleY] = useState(1); // vertical   cm -> px
+  const [scaleX, setScaleX] = useState(1);
+  const [scaleY, setScaleY] = useState(1);
 
   useEffect(() => {
     function compute() {
@@ -20,18 +20,14 @@ export default function MultiPlatePreview({ plates, motifUrl }) {
 
       const boxW = Math.max(1, el.clientWidth);
       const boxH = Math.max(1, el.clientHeight);
-
       const totalWidthCm =
         plates.reduce((sum, p) => sum + (Number(p.widthCm) || 0), 0) || 1;
 
-      // Always fix vertical scale so 128 cm == preview height
       const vScale = boxH / HEIGHT_MAX;
-
-      // Horizontal fit: if too wide, shrink horizontally only
       const hScale = boxW / totalWidthCm;
 
       setScaleY(vScale);
-      setScaleX(Math.min(vScale, hScale)); // width may shrink; height stays true-to-scale
+      setScaleX(Math.min(vScale, hScale));
     }
 
     compute();
@@ -43,19 +39,16 @@ export default function MultiPlatePreview({ plates, motifUrl }) {
     };
   }, [plates]);
 
-  // Frame = full virtual layout we slice from
   const el = boxRef.current;
-  const frameH = el ? el.clientHeight : 360; // px
+  const frameH = el ? el.clientHeight : 360;
   const totalWidthCm = plates.reduce((s, p) => s + (Number(p.widthCm) || 0), 0) || 1;
-  const frameW = Math.max(1, Math.round(totalWidthCm * scaleX)); // px
+  const frameW = Math.max(1, Math.round(totalWidthCm * scaleX));
 
-  // Step 7: mirroring if total width > 300 cm
   const MOTIF_WIDTH_CM = 300;
   const needMirror = totalWidthCm > MOTIF_WIDTH_CM;
-  const tileW = Math.max(1, Math.round(MOTIF_WIDTH_CM * scaleX)); // px
+  const tileW = Math.max(1, Math.round(MOTIF_WIDTH_CM * scaleX));
   const tileCount = Math.max(1, Math.ceil(frameW / tileW));
 
-  // Accumulate left offset in cm
   let xCm = 0;
 
   return (
@@ -71,19 +64,19 @@ export default function MultiPlatePreview({ plates, motifUrl }) {
         xCm += (Number(p.widthCm) || 0);
 
         return (
-          <div
+          <motion.div
             key={p.id}
             className="position-absolute"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1, width: w, height: h, left: leftPx }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ duration: 0.3 }}
             style={{
-              left: leftPx,
               bottom: 0,
-              width: w,
-              height: h,
               overflow: "hidden",
               boxShadow: "0 2px 6px rgba(0,0,0,.06)",
             }}
           >
-            {/* Step 6: single motif (≤ 300 cm) */}
             {!needMirror && (
               <img
                 crossOrigin="anonymous"
@@ -91,11 +84,11 @@ export default function MultiPlatePreview({ plates, motifUrl }) {
                 alt={`plate-${i + 1}`}
                 style={{
                   position: "absolute",
-                  left: -leftPx,     // this plate shows its slice
+                  left: -leftPx,
                   bottom: 0,
                   width: frameW,
                   height: frameH,
-                  objectFit: "cover",      // no cropping; slight stretch allowed
+                  objectFit: "cover",
                   objectPosition: "center center",
                   userSelect: "none",
                   pointerEvents: "none",
@@ -103,12 +96,11 @@ export default function MultiPlatePreview({ plates, motifUrl }) {
               />
             )}
 
-            {/* Step 7: mirrored tiling (> 300 cm) */}
             {needMirror && (
               <div
                 style={{
                   position: "absolute",
-                  left: -leftPx, // align to global canvas
+                  left: -leftPx,
                   bottom: 0,
                   width: frameW,
                   height: frameH,
@@ -124,7 +116,7 @@ export default function MultiPlatePreview({ plates, motifUrl }) {
                     style={{
                       width: tileW,
                       height: frameH,
-                      objectFit: "cover",      // no cropping
+                      objectFit: "cover",
                       objectPosition: "center center",
                       transform: idx % 2 === 1 ? "scaleX(-1)" : "none",
                       userSelect: "none",
@@ -134,7 +126,7 @@ export default function MultiPlatePreview({ plates, motifUrl }) {
                 ))}
               </div>
             )}
-          </div>
+          </motion.div>
         );
       })}
     </div>
