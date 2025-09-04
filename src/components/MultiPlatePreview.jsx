@@ -2,62 +2,73 @@ import React, { useEffect, useRef, useState } from "react";
 import { HEIGHT_MAX } from "../constants/limits.js";
 
 /**
- * Step 6 + Step 7 (correct):
- * - If total width ≤ 300 cm → single motif, sliced (Step 6).
- * - If total width  > 300 cm → extend motif by mirroring tiles (Step 7).
- * Plates show their slice by offsetting the big canvas by -leftPx.
+ * MultiPlatePreview
+ * - Fixed vertical scale (128cm == preview height)
+ * - Horizontal scale shrinks if total width exceeds preview width
+ * - Step 6: single motif when totalWidth <= 300 cm
+ * - Step 7: mirrored tiling when totalWidth > 300 cm
  */
 export default function MultiPlatePreview({ plates, motifUrl }) {
   const boxRef = useRef(null);
-  const [scale, setScale] = useState(1);
+  const [scaleX, setScaleX] = useState(1); // horizontal cm -> px
+  const [scaleY, setScaleY] = useState(1); // vertical   cm -> px
 
   useEffect(() => {
     function compute() {
       const el = boxRef.current;
       if (!el) return;
-      const rect = el.getBoundingClientRect();
-      const boxW = Math.max(1, rect.width);
-      const boxH = Math.max(1, rect.height);
 
-      const totalWidthCm = plates.reduce((sum, p) => sum + p.widthCm, 0) || 1;
-      const vScale = boxH / HEIGHT_MAX;   // 128 cm -> full height
-      const hScale = boxW / totalWidthCm; // shrink if too wide
-      setScale(Math.min(vScale, hScale));
+      const boxW = Math.max(1, el.clientWidth);
+      const boxH = Math.max(1, el.clientHeight);
+
+      const totalWidthCm =
+        plates.reduce((sum, p) => sum + (Number(p.widthCm) || 0), 0) || 1;
+
+      // Always fix vertical scale so 128 cm == preview height
+      const vScale = boxH / HEIGHT_MAX;
+
+      // Horizontal fit: if too wide, shrink horizontally only
+      const hScale = boxW / totalWidthCm;
+
+      setScaleY(vScale);
+      setScaleX(Math.min(vScale, hScale)); // width may shrink; height stays true-to-scale
     }
+
     compute();
     window.addEventListener("resize", compute);
-    return () => window.removeEventListener("resize", compute);
+    const id = requestAnimationFrame(compute);
+    return () => {
+      window.removeEventListener("resize", compute);
+      cancelAnimationFrame(id);
+    };
   }, [plates]);
 
-  const boxH = 360; // matches your fixed preview height
-  const totalWidthCm = plates.reduce((s, p) => s + p.widthCm, 0) || 1;
+  // Frame = full virtual layout we slice from
+  const el = boxRef.current;
+  const frameH = el ? el.clientHeight : 360; // px
+  const totalWidthCm = plates.reduce((s, p) => s + (Number(p.widthCm) || 0), 0) || 1;
+  const frameW = Math.max(1, Math.round(totalWidthCm * scaleX)); // px
 
-  // Step 7 constants
-  const MOTIF_WIDTH_CM = 300;                // base motif logical width
+  // Step 7: mirroring if total width > 300 cm
+  const MOTIF_WIDTH_CM = 300;
   const needMirror = totalWidthCm > MOTIF_WIDTH_CM;
-
-  // Frame dimensions (the full layout in px)
-  const frameW = Math.round(totalWidthCm * scale);
-  const frameH = boxH;
-
-  // Mirroring tile width in px (each tile is 300 cm wide at current scale)
-  const tileW = Math.round(MOTIF_WIDTH_CM * scale);
+  const tileW = Math.max(1, Math.round(MOTIF_WIDTH_CM * scaleX)); // px
   const tileCount = Math.max(1, Math.ceil(frameW / tileW));
 
-  // Running x (in cm) to place plate windows
+  // Accumulate left offset in cm
   let xCm = 0;
 
   return (
     <div
       ref={boxRef}
       className="w-100 bg-white position-relative"
-      style={{ height: boxH, minHeight: boxH, maxHeight: boxH, overflow: "hidden" }}
+      style={{ height: 360, minHeight: 360, maxHeight: 360, overflow: "hidden" }}
     >
       {plates.map((p, i) => {
-        const w = Math.round(p.widthCm * scale);
-        const h = Math.round(p.heightCm * scale);
-        const leftPx = Math.round(xCm * scale);
-        xCm += p.widthCm;
+        const w = Math.max(1, Math.round((Number(p.widthCm) || 0) * scaleX));
+        const h = Math.max(1, Math.round((Number(p.heightCm) || 0) * scaleY));
+        const leftPx = Math.round(xCm * scaleX);
+        xCm += (Number(p.widthCm) || 0);
 
         return (
           <div
@@ -72,31 +83,32 @@ export default function MultiPlatePreview({ plates, motifUrl }) {
               boxShadow: "0 2px 6px rgba(0,0,0,.06)",
             }}
           >
-            {/* --- Step 6: simple single image (≤ 300 cm) --- */}
+            {/* Step 6: single motif (≤ 300 cm) */}
             {!needMirror && (
               <img
+                crossOrigin="anonymous"
                 src={motifUrl}
                 alt={`plate-${i + 1}`}
                 style={{
                   position: "absolute",
-                  left: -leftPx,      // shift so this plate shows its slice
+                  left: -leftPx,     // this plate shows its slice
                   bottom: 0,
                   width: frameW,
                   height: frameH,
-                  objectFit: "cover",
-                  objectPosition: "center bottom",
+                  objectFit: "cover",      // no cropping; slight stretch allowed
+                  objectPosition: "center center",
                   userSelect: "none",
                   pointerEvents: "none",
                 }}
               />
             )}
 
-            {/* --- Step 7: mirrored tiling (> 300 cm) --- */}
+            {/* Step 7: mirrored tiling (> 300 cm) */}
             {needMirror && (
               <div
                 style={{
                   position: "absolute",
-                  left: -leftPx,   // align to the global canvas
+                  left: -leftPx, // align to global canvas
                   bottom: 0,
                   width: frameW,
                   height: frameH,
@@ -105,15 +117,16 @@ export default function MultiPlatePreview({ plates, motifUrl }) {
               >
                 {Array.from({ length: tileCount }).map((_, idx) => (
                   <img
+                    crossOrigin="anonymous"
                     key={idx}
                     src={motifUrl}
                     alt={`motif-tile-${idx}`}
                     style={{
                       width: tileW,
                       height: frameH,
-                      objectFit: "cover",
-                      objectPosition: "center bottom",
-                      transform: idx % 2 === 1 ? "scaleX(-1)" : "none", // mirror every other tile
+                      objectFit: "cover",      // no cropping
+                      objectPosition: "center center",
+                      transform: idx % 2 === 1 ? "scaleX(-1)" : "none",
                       userSelect: "none",
                       pointerEvents: "none",
                     }}
