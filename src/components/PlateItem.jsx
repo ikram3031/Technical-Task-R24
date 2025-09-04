@@ -1,13 +1,27 @@
 import React from "react";
 import PlateForm from "./PlateForm.jsx";
 
-export default function PlateItem({ index, plate, onCommit, onRemove, canRemove }) {
+export default function PlateItem({
+  index,
+  plate,
+  onCommit,
+  onRemove,
+  canRemove,
+  dragHandleProps = {}
+}) {
   return (
     <div className="plate-card d-flex align-items-center justify-content-between">
-      {/* Index badge */}
-      <span className="plate-index">{index + 1}</span>
+      {/* Index badge (drag handle) */}
+      <span
+        className="plate-index"
+        {...dragHandleProps}
+        title="Ziehen zum Neuordnen"
+        style={{ cursor: "grab" }}
+      >
+        {index + 1}
+      </span>
 
-      {/* Form fields (with validation & warnings) */}
+      {/* Form fields */}
       <div className="flex-grow-1">
         <PlateForm value={plate} onCommit={onCommit} />
       </div>

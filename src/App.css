@@ -144,3 +144,4 @@ input.plate-input-box,
 .dim-field {
   min-height: 44px; /* Apple HIG recommended touch target */
 }
+.plate-index:active { cursor: grabbing; }

@@ -2,7 +2,8 @@ import React, { useEffect, useRef, useState } from "react";
 import MultiPlatePreview from "./components/MultiPlatePreview.jsx";
 import PlateItem from "./components/PlateItem.jsx";
 import PlateMeta from "./components/PlateMeta.jsx";
-import MotifUploader from "./components/MotifUploader.jsx"; // if you haven't added this yet, you can remove this line + the uploader block
+import MotifUploader from "./components/MotifUploader.jsx"; // keep/remove as you wish
+import PlateListDnd from "./components/PlateListDnd.jsx";   // <-- NEW
 import { exportNodeToPng } from "./utils/exportPng.js";
 import {
   DEFAULT_PLATE,
@@ -20,7 +21,8 @@ const ensureMotif = (list) =>
   (Array.isArray(list) ? list : []).map((p) => ({
     ...p,
     motifUrl:
-      typeof p?.motifUrl === "string" && (p.motifUrl.startsWith("http") || p.motifUrl.startsWith("data:"))
+      typeof p?.motifUrl === "string" &&
+      (p.motifUrl.startsWith("http") || p.motifUrl.startsWith("data:"))
         ? p.motifUrl
         : DEFAULT_MOTIF_URL,
   }));
@@ -65,6 +67,11 @@ export default function App() {
     setPlates((prev) => prev.map((p) => (p.id === id ? { ...p, ...next } : p)));
   };
 
+  // DnD reorder handler
+  const handleReorder = (nextList) => {
+    setPlates(nextList);
+  };
+
   // Shared motif helpers (current motif = from first plate)
   const currentMotif = plates[0]?.motifUrl || DEFAULT_MOTIF_URL;
   const setMotifForAll = (url) => setPlates((prev) => prev.map((p) => ({ ...p, motifUrl: url })));
@@ -77,16 +84,15 @@ export default function App() {
   // PNG export
   const previewRef = useRef(null);
   const handleExportPng = async () => {
-    // Export only the preview content (card body) for a clean image
     await exportNodeToPng(previewRef.current, "Rueckwand-Preview.png");
   };
 
   return (
     <div className="container py-4">
       <header className="mb-3">
-        <h1 className="h4 mb-1">Plate Generator — Step 7 + PNG Export</h1>
+        <h1 className="h4 mb-1">Plate Generator — Step 7 + PNG Export + DnD</h1>
         <p className="text-muted mb-0">
-          Shared motif with slicing & mirroring; export the preview as PNG.
+          Shared motif with slicing & mirroring; export as PNG; drag to reorder plates.
         </p>
       </header>
 
@@ -108,9 +114,9 @@ export default function App() {
           </div>
         </div>
 
-        {/* Right: uploader (optional) + plate list + add button + meta */}
+        {/* Right: uploader (optional) + DnD list + add button + meta */}
         <div className="col-12 col-lg-4 d-flex flex-column gap-3">
-          {/* Remove this block if you didn't add MotifUploader.jsx */}
+          {/* Remove if you didn't add MotifUploader.jsx */}
           <MotifUploader
             value={currentMotif}
             onChange={setMotifForAll}
@@ -118,23 +124,22 @@ export default function App() {
             defaultUrl={DEFAULT_MOTIF_URL}
           />
 
-          {plates.map((p, idx) => (
-            <PlateItem
-              key={p.id}
-              index={idx}
-              plate={p}
-              onCommit={(next) => updatePlate(p.id, next)}
-              onRemove={() => removePlate(p.id)}
-              canRemove={plates.length > 1}
-            />
-          ))}
+          {/* Drag & Drop list */}
+          <PlateListDnd
+            plates={plates}
+            onReorder={handleReorder}
+            onCommit={(id, next) => updatePlate(id, next)}
+            onRemove={(id) => removePlate(id)}
+          />
 
+          {/* Add button */}
           <div className="d-grid">
             <button className="btn-add" onClick={addPlate} disabled={plates.length >= 10}>
               Rückwand hinzufügen +
             </button>
           </div>
 
+          {/* Meta info */}
           <div className="card border-0">
             <div className="card-body">
               <PlateMeta
