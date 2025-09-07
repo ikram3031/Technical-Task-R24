@@ -82,12 +82,6 @@ export default function MotifUploader({ value, onChange, onReset, defaultUrl }) 
         <div>
           <button
             className="px-3 py-1 btn-green"
-            /* style={{
-              border: "2px solid #10B981",
-              borderRadius: 4,
-              backgroundColor: "white",
-              color: "#10B981",
-            }} */
           >
             Auf Standardmotiv zurücksetzen
           </button>
