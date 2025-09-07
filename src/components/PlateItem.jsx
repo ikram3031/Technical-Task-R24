@@ -22,6 +22,7 @@ export default function PlateItem({
   onRemove,
   canRemove,
   dragHandleProps = {},
+  isLast
 }) {
   const [unit, setUnit] = useState("cm");
   const [wInput, setWInput] = useState(formatNumber(cmToUnit(plate.widthCm, unit)));
@@ -84,7 +85,7 @@ export default function PlateItem({
   return (
     <div className="plate-row">
       {/* Index badge */}
-      <span className="plate-index" {...dragHandleProps} title="Ziehen zum Neuordnen">
+      <span className={`plate-index ${isLast ? "plate-index-dark" : ""}`} {...dragHandleProps} title="Ziehen zum Neuordnen">
         {index + 1}
       </span>
 

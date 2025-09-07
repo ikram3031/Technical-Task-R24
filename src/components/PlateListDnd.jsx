@@ -42,6 +42,7 @@ export default function PlateListDnd({ plates, onReorder, onCommit, onRemove }) 
                       canRemove={plates.length > 1}
                       // pass handle props so only the index badge acts as the drag handle
                       dragHandleProps={draggableProvided.dragHandleProps}
+                      isLast={idx === plates.length - 1}
                     />
                   </div>
                 )}

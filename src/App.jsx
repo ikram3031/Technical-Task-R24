@@ -137,8 +137,8 @@ export default function App() {
           />
 
           {/* Add button */}
-          <div className="d-grid">
-            <button className="btn-green" onClick={addPlate} disabled={plates.length >= 10}>
+          <div className="btn-side">
+            <button className="btn-green " onClick={addPlate} disabled={plates.length >= 10}>
               Rückwand hinzufügen +
             </button>
           </div>

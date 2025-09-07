@@ -13,6 +13,11 @@
   color: white;
 }
 
+.btn-side{
+    display: flex;
+    justify-content: end;
+}
+
 /* Each row (no major change) */
 .plate-row {
   display: flex;
@@ -217,4 +222,10 @@
   font-size: 12px;
   color: #ef4444;
   margin-top: 2px;
+}
+
+.plate-index-dark {
+  background: #000;
+  color: #fff;
+  border: none;
 }
