@@ -99,7 +99,10 @@ export default function App() {
       <div className="row g-4">
         {/* Left: multi-plate preview */}
         <div className="col-12 col-lg-8">
-          <div className="left-sticky mobile-sticky">
+          <div 
+              // className="left-sticky mobile-sticky"
+              className="sticky-top"
+            >
             <div className="card shadow-sm preview-card">
               <div className="card-header bg-white d-flex justify-content-between align-items-center">
                 <strong>Preview</strong>
