@@ -114,18 +114,19 @@ export default function App() {
                 <MultiPlatePreview plates={plates} motifUrl={currentMotif} />
               </div>
             </div>
-          </div>
+            <MotifUploader
+              value={currentMotif}
+              onChange={setMotifForAll}
+              onReset={resetMotif}
+              defaultUrl={DEFAULT_MOTIF_URL}
+            />
+          </div>          
         </div>
 
         {/* Right: uploader (optional) + DnD list + add button + meta */}
         <div className="col-12 col-lg-4 d-flex flex-column gap-3">
           {/* Remove if you didn't add MotifUploader.jsx */}
-          <MotifUploader
-            value={currentMotif}
-            onChange={setMotifForAll}
-            onReset={resetMotif}
-            defaultUrl={DEFAULT_MOTIF_URL}
-          />
+          
 
           {/* Drag & Drop list */}
           <PlateListDnd
@@ -143,7 +144,7 @@ export default function App() {
           </div>
 
           {/* Meta info */}
-          <div className="card border-0">
+          {/* <div className="card border-0">
             <div className="card-body">
               <PlateMeta
                 plate={{ widthCm: totalWidthCm, heightCm: maxHeightCm }}
@@ -152,7 +153,7 @@ export default function App() {
               />
               <small className="text-muted">Plates: {plates.length} (1–10)</small>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>
