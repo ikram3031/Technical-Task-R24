@@ -1,3 +1,4 @@
+/* ✅ Buttons */
 .btn-green {
   border: 2px solid #10B981;
   border-radius: 4px;
@@ -7,128 +8,14 @@
   transition: all 0.2s ease;
   cursor: pointer;
 }
-
 .btn-green:hover {
   background-color: #10B981;
   color: white;
 }
-
-.btn-side{
-    display: flex;
-    justify-content: end;
-}
-
-/* Each row (no major change) */
-.plate-row {
+.btn-side {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 10px 14px;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  background: #f2f2f2;
-  margin: 16px 0;
+  justify-content: end;
 }
-
-/* Index badge (unchanged) */
-.plate-index {
-  width: 34px;
-  height: 34px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  font-size: 18px;
-  font-weight: 500;
-  background: #f9fafb;
-  cursor: grab;
-}
-
-/* Field group wrapper (NEW for label + range + input) */
-.plate-group {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 100px;
-}
-
-
-/* Label (Breite / Höhe) */
-.plate-label {
-  font-size: 13px;
-  font-weight: 500;
-  color: #374151;
-}
-
-/* Range text */
-.plate-range {
-  font-size: 11px;
-  color: #6b7280;
-}
-
-/* Input field wrapper (unchanged visual) */
-.plate-field {
-  display: flex;
-  align-items: center;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  padding: 4px 8px;
-  background: #fff;
-}
-
-.plate-field input {
-  width: 60px;
-  border: none;
-  outline: none;
-  font-weight: 600;
-  font-size: 15px;
-  text-align: center;
-  background: transparent;
-}
-
-@media (max-width: 400px) {
-  .plate-group {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    min-width: 80px;
-  }
-  
-  .plate-field input{
-    width: 40px;
-  }
-}
-
-.plate-field .unit {
-  margin-left: 6px;
-  font-size: 13px;
-  color: #6b7280;
-}
-
-/* Unit toggle (cm / in) */
-.unit-toggle {
-  display: inline-flex;
-  border: 1px solid #111827;
-  border-radius: 6px;
-  overflow: hidden;
-}
-
-.unit-toggle button {
-  padding: 3px 8px;
-  background: #fff;
-  border: none;
-  font-size: 13px;
-  cursor: pointer;
-}
-
-.unit-toggle button.active {
-  background: #111827;
-  color: #fff;
-}
-
-/* Remove button (unchanged) */
 .btn-remove {
   width: 20px;
   height: 20px;
@@ -144,34 +31,114 @@
   justify-content: center;
   transition: all 0.3s ease;
 }
-
 .btn-remove:hover:not(.disabled) {
   background: #ef4444;
   color: #fff;
   transform: scale(1.05);
 }
-
 .btn-remove.disabled {
   background: #d1d5db;
   cursor: not-allowed;
 }
 
-
+/* ✅ Plate row */
+.plate-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #f2f2f2;
+  margin: 16px 0;
+}
 .plate-form {
   padding: 12px;
 }
 
-/* Unit toggle */
+/* ✅ Index badge */
+.plate-index {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: 500;
+  background: #f9fafb;
+  cursor: grab;
+}
+.plate-index-dark {
+  background: #000;
+  color: #fff;
+  border: none;
+}
+
+/* ✅ Field group wrapper */
+.plate-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 100px;
+}
+@media (max-width: 400px) {
+  .plate-group {
+    min-width: 80px;
+  }
+  .plate-field input {
+    width: 40px;
+  }
+}
+
+/* ✅ Label + Range */
+.plate-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+}
+.plate-range {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+/* ✅ Input field wrapper */
+.plate-field {
+  display: flex;
+  align-items: center;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 4px 8px;
+  background: #fff;
+}
+.plate-field input {
+  width: 60px;
+  border: none;
+  outline: none;
+  font-weight: 600;
+  font-size: 15px;
+  text-align: center;
+  background: transparent;
+}
+.plate-field .unit {
+  margin-left: 6px;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* ✅ Unit toggle */
 .unit-toggle {
   display: flex;
   justify-content: flex-end;
-  /* margin-bottom: 12px; */
-  /* gap: 6px; */
+  border: 1px solid #111827;
+  border-radius: 6px;
+  overflow: hidden;
 }
 .unit-toggle button {
   padding: 4px 10px;
   border: 1px solid #d1d5db;
-  /* border-radius: 6px; */
   background: #fff;
   cursor: pointer;
   font-size: 14px;
@@ -186,7 +153,7 @@
   border-color: #111827;
 }
 
-/* Fields */
+/* ✅ Field grid (secondary layout) */
 .field-grid {
   display: flex;
   gap: 16px;
@@ -237,10 +204,3 @@
   color: #ef4444;
   margin-top: 2px;
 }
-
-.plate-index-dark {
-  background: #000;
-  color: #fff;
-  border: none;
-}
-
