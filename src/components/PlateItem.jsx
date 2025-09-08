@@ -124,13 +124,20 @@ export default function PlateItem({
       </div>
 
       {/* Unit toggle */}
-      <div className="unit-toggle">
+      <div style={{
+        height: "80px",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "flex-end",        
+      }}>
+        <div className="unit-toggle">
         <button className={unit === "cm" ? "active" : ""} onClick={() => toggleUnit("cm")}>
           cm
         </button>
         <button className={unit === "in" ? "active" : ""} onClick={() => toggleUnit("in")}>
           in
         </button>
+      </div>
       </div>
 
       {/* Remove button */}
