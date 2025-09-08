@@ -54,6 +54,7 @@
   min-width: 100px;
 }
 
+
 /* Label (Breite / Höhe) */
 .plate-label {
   font-size: 13px;
@@ -85,6 +86,19 @@
   font-size: 15px;
   text-align: center;
   background: transparent;
+}
+
+@media (max-width: 400px) {
+  .plate-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 80px;
+  }
+  
+  .plate-field input{
+    width: 40px;
+  }
 }
 
 .plate-field .unit {
@@ -229,3 +243,4 @@
   color: #fff;
   border: none;
 }
+

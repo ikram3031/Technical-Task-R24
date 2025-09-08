@@ -139,7 +139,9 @@ export default function PlateItem({
         onClick={onRemove}
         disabled={!canRemove}
       >
-        –
+        <span style={{
+          marginBottom: "2px"
+        }}>–</span>
       </button>
     </div>
   );
